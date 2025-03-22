@@ -1,17 +1,16 @@
 // standard rust
 use std::rc::Rc;
 // crate
-use crate::{simple_difference, simple_intersection, simple_union, Item, MetaSet, Node, NodeSlice, SimpleItemSet};
-use super::{get_items, NodeResolveError};
+use crate::{get_items, simple_difference, simple_intersection, simple_union, Item, MetaSet, Node, NodeSlice, SimpleItemSet, NodeResolveError};
 
-pub struct LogicalAnd<ItemType>
+pub struct LogicalOr<ItemType>
 where ItemType: Item
 {
     dep_ids: Vec<usize>,
     items: Option<Rc<MetaSet<ItemType>>>
 }
 
-impl<ItemType> Node<ItemType> for LogicalAnd<ItemType>
+impl<ItemType> Node<ItemType> for LogicalOr<ItemType>
 where ItemType: Item
 {
     fn get_items(&mut self, nodes: NodeSlice<ItemType>) -> Result<Rc<MetaSet<ItemType>>, NodeResolveError>
@@ -54,13 +53,13 @@ where ItemType: Item
 
             dep_incl_sets.iter().for_each(|set| {
                 include_set = Some(
-                    simple_intersection(include_set.as_ref().unwrap(), set.get_include_set())
+                    simple_union(include_set.as_ref().unwrap(), set.get_include_set())
                 );
             });
 
             dep_excl_sets.iter().for_each(|set| {
                 exclude_set = Some(
-                    simple_union(exclude_set.as_ref().unwrap(), set.get_exclude_set())
+                    simple_intersection(exclude_set.as_ref().unwrap(), set.get_exclude_set())
                 );
             });
 
@@ -70,7 +69,7 @@ where ItemType: Item
                 if exclude_set.is_some()
                 {
                     self.items = Some(Rc::new(
-                        MetaSet::Include { set: simple_difference(include_set.as_ref().unwrap(), exclude_set.as_ref().unwrap()) }
+                        MetaSet::Exclude { set: simple_difference(exclude_set.as_ref().unwrap(), include_set.as_ref().unwrap()) }
                     ));
                 }
                 else
@@ -82,9 +81,9 @@ where ItemType: Item
             }
             else
             {
-                 self.items = Some(Rc::new(
+                self.items = Some(Rc::new(
                     MetaSet::Exclude { set: exclude_set.unwrap() }
-                 ));
+                ));
             }
         }
 

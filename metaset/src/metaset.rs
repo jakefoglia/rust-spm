@@ -4,14 +4,6 @@ use std::hash::{Hash, Hasher};
 use std::collections::HashSet;
 
 
-/*
-A metaset is represents this:
-
-Include U (P - Exclude)
-
-Therefore any MetaSet with an Exclude set is infinite
-*/
-
 pub trait Item: PartialEq + Eq + Hash {}
 
 pub struct RcItem<ItemType: Item> (Rc<ItemType>);
@@ -46,9 +38,8 @@ pub type SimpleItemSet<ItemType> = HashSet<RcItem<ItemType>>;
 pub enum MetaSet<ItemType>
 where ItemType: Item
 {
-    Include {include_set: SimpleItemSet<ItemType>},
-    Exclude {exclude_set: SimpleItemSet<ItemType>},
-    IncludeExclude {include_set: SimpleItemSet<ItemType>, exclude_set: SimpleItemSet<ItemType>},
+    Include {set: SimpleItemSet<ItemType>},
+    Exclude {set: SimpleItemSet<ItemType>},
 }
 
 impl<ItemType> Clone for MetaSet<ItemType>
@@ -57,9 +48,8 @@ where ItemType: Item
     fn clone(&self) -> Self
     {
         match self {
-            Self::Include {include_set} => Self::Include { include_set: include_set.clone() },
-            Self::Exclude {exclude_set} => Self::Exclude { exclude_set: exclude_set.clone() },
-            Self::IncludeExclude {include_set, exclude_set} => Self::IncludeExclude { include_set: include_set.clone(), exclude_set: exclude_set.clone() },
+            Self::Include {set} => Self::Include { set: set.clone() },
+            Self::Exclude {set} => Self::Exclude { set: set.clone() },
         }
     }
 }
@@ -72,56 +62,22 @@ where ItemType: Item
         match self {
             MetaSet::Include {..} => true,
             MetaSet::Exclude {..} => false,
-            MetaSet::IncludeExclude {..} => false,
-        }
-    }
-
-    pub fn get_set(&self) -> &SimpleItemSet<ItemType>
-    {
-        if let MetaSet::Include{ref include_set} = self
-        {
-            return include_set;
-        }
-        else
-        {
-            panic!("MetaSet instance is not finite!");
-        }
-    }
-
-    pub fn has_include_set(&self) -> bool
-    {
-        match self {
-            MetaSet::Include {..} => true,
-            MetaSet::Exclude {..} => false,
-            MetaSet::IncludeExclude {..} => true,
         }
     }
 
     pub fn get_include_set(&self) -> &SimpleItemSet<ItemType>
     {
         match self {
-            MetaSet::Include {ref include_set} => include_set,
-            MetaSet::Exclude {exclude_set: _} => panic!("MetaSet::Exclude has no member include_set"),
-            MetaSet::IncludeExclude {ref include_set, exclude_set: _} => include_set,
-
-        }
-    }
-
-    pub fn has_exclude_set(&self) -> bool
-    {
-        match self {
-            MetaSet::Include {..} => false,
-            MetaSet::Exclude {..} => true,
-            MetaSet::IncludeExclude {..} => true,
+            MetaSet::Include {ref set} => set,
+            MetaSet::Exclude {set: _} => panic!("MetaSet::Exclude does not support get_include_set()"),
         }
     }
 
     pub fn get_exclude_set(&self) -> &SimpleItemSet<ItemType>
     {
         match self {
-            MetaSet::Include {include_set: _} => panic!("MetaSet::Include has no member exclude_set"),
-            MetaSet::Exclude {ref exclude_set} => exclude_set,
-            MetaSet::IncludeExclude {include_set: _, ref exclude_set} => exclude_set,
+            MetaSet::Include {set: _} => panic!("MetaSet::Include does not supoport get_exclude_set()"),
+            MetaSet::Exclude {ref set} => set,
         }
     }
 }
