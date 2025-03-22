@@ -1,9 +1,11 @@
 pub mod node;
 pub mod metaset;
 
-pub use node::{Node, NodeSlice};
-pub use node::node_types::*;
-pub use metaset::{MetaSet, MetaItem};
+pub use metaset::MetaSet;
+pub use node::{Node, types};
+
+use metaset::*;
+use node::*;
 
 #[cfg(test)]
 mod tests {

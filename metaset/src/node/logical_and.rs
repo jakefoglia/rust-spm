@@ -1,9 +1,8 @@
 // standard rust
-use std::{borrow::BorrowMut, cell::RefCell, cell::RefMut};
-use std::collections::HashSet;
 use std::rc::Rc;
+
 // crate
-use crate::{Node, NodeSlice, MetaSet, MetaItem};
+use crate::{simple_difference, simple_intersection, simple_union, Item, MetaSet, Node, NodeSlice, SimpleItemSet};
 
 use super::get_items;
 
@@ -45,20 +44,40 @@ use super::get_items;
                     return new TrackStream(finalIncludeSet, finalExcludeSet)
           */
 
-pub struct Node_LogicalAnd<Item>
-where Item: MetaItem
+pub struct LogicalAnd<ItemType>
+where ItemType: Item
 {
     dep_ids: Vec<usize>,
-    items: Option<Rc<MetaSet<Item>>>
+    items: Option<Rc<MetaSet<ItemType>>>
 }
 
-impl<Item, Error> Node<Item, Error> for Node_LogicalAnd<Item>
-where Item: MetaItem
+impl<ItemType, ErrorKind> Node<ItemType, ErrorKind> for LogicalAnd<ItemType>
+where ItemType: Item
 {
-    fn get_items(&mut self, nodes: NodeSlice<Item, Error>) -> Result<Rc<MetaSet<Item>>, Error>
+    fn get_items(&mut self, nodes: NodeSlice<ItemType, ErrorKind>) -> Result<Rc<MetaSet<ItemType>>, ErrorKind>
     {
         if self.items.is_none()
         {
+            // helper for returning final result (TODO move this elsewhere for other node types to use??)
+            let make_result = |include_set: Option<SimpleItemSet<ItemType>>, exclude_set: Option<SimpleItemSet<ItemType>>| {
+                if include_set.is_some()
+                {
+                    if exclude_set.is_some()
+                    {
+                        return MetaSet::IncludeExclude {include_set: include_set.unwrap(),
+                                                        exclude_set: exclude_set.unwrap()};
+                    }
+                    else
+                    {
+                        return MetaSet::Include {include_set: include_set.unwrap()};
+                    }
+                }
+                else
+                {
+                    return MetaSet::Exclude {exclude_set: exclude_set.unwrap()};
+                }
+            };
+
             // self.items = Some(MetaSet::Include{include: HashSet::default()})
 /*
             first we work on the type 1 and 2 sets to generate (include, exclude)
@@ -69,15 +88,58 @@ where Item: MetaItem
             4. if include != null, set exclude = null
 */
             // First work on incoming Include and Exclude sets to generate (include, exclude)
-            let (include, exclude) : (Option<HashSet<Rc<Item>>>, Option<HashSet<Rc<Item>>>) = (None, None);
+            let mut include_set : Option<SimpleItemSet<ItemType>> = None;
+            let mut exclude_set : Option<SimpleItemSet<ItemType>> = None;
 
-            for dep_id in self.dep_ids.iter()
+            let mut dep_item_sets: Vec<Rc<MetaSet<ItemType>>> = Vec::with_capacity(self.dep_ids.len());
+            for id in &self.dep_ids
             {
-                let dep_items = get_items(nodes, *dep_id);
+                let dep_items = get_items(nodes, *id)?;
+                dep_item_sets.push(dep_items);
             }
 
-        }
+            let mut has_include_exclude_deps = false;
+            dep_item_sets.iter().for_each(|dep_items| {
+                match dep_items.as_ref()
+                {
+                    &MetaSet::Include { include_set: ref dep_include_set } => {
+                        include_set = Some(
+                            simple_intersection(include_set.as_ref().unwrap(), dep_include_set)
+                        );
+                    }
+                    &MetaSet::Exclude { exclude_set: ref dep_exclude_set } => {
+                        exclude_set = Some(
+                            simple_union(exclude_set.as_ref().unwrap(), dep_exclude_set)
+                        )
+                    }
+                    &MetaSet::IncludeExclude {..} => {
+                        has_include_exclude_deps = true;
+                    }
+                }
+            });
 
-        Ok(self.items.clone().unwrap())
+            if include_set.is_some() && exclude_set.is_some()
+            {
+                include_set = Some(
+                    simple_difference(include_set.as_ref().unwrap(), exclude_set.as_ref().unwrap())
+                );
+                exclude_set = None;
+            }
+
+            // if no incoming IncludeExclude sets, then there's no more work to do
+            if !has_include_exclude_deps
+            {
+                self.items = Some(Rc::new(make_result(include_set, exclude_set)));
+                return Ok(self.items.clone().unwrap());
+            }
+
+            // else - some additional steps...
+            return Ok(self.items.clone().unwrap()) // TODO
+
+        }
+        else
+        {
+            Ok(self.items.clone().unwrap())
+        }
     }
 }
