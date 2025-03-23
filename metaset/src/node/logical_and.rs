@@ -8,12 +8,25 @@ pub struct LogicalAnd<ItemType>
 where ItemType: Item
 {
     dep_ids: Vec<usize>,
+    parent_ids: Vec<usize>,
     items: Option<Rc<MetaSet<ItemType>>>
 }
 
 impl<ItemType> Node<ItemType> for LogicalAnd<ItemType>
 where ItemType: Item
 {
+    fn get_dependency_ids(&self) -> &[usize] {
+        return &self.dep_ids;
+    }
+
+    fn get_parent_ids(&self) -> &[usize] {
+        return &self.parent_ids;
+    }
+
+    fn clear_cached_items(&mut self) {
+        self.items = None;
+    }
+
     fn get_items(&mut self, nodes: NodeSlice<ItemType>) -> Result<Rc<MetaSet<ItemType>>, NodeResolveError>
     {
         if self.items.is_none()

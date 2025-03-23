@@ -8,12 +8,29 @@ pub struct LogicalNot<ItemType>
 where ItemType: Item
 {
     dep_id: Option<usize>,
+    parent_ids: Vec<usize>,
     items: Option<Rc<MetaSet<ItemType>>>
 }
 
 impl<ItemType> Node<ItemType> for LogicalNot<ItemType>
 where ItemType: Item
 {
+    fn get_dependency_ids(&self) -> &[usize] {
+        match self.dep_id.as_ref()
+        {
+            Some(ref id) => std::slice::from_ref(id),
+            None => &[]
+        }
+    }
+
+    fn get_parent_ids(&self) -> &[usize] {
+        return &self.parent_ids;
+    }
+
+    fn clear_cached_items(&mut self) {
+        self.items = None;
+    }
+
     fn get_items(&mut self, nodes: NodeSlice<ItemType>) -> Result<Rc<MetaSet<ItemType>>, NodeResolveError>
     {
         if self.items.is_none()
