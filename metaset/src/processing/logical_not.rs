@@ -9,7 +9,7 @@ pub struct LogicalNot ();
 impl<ItemType> Processor<ItemType> for LogicalNot
 where ItemType: Item
 {
-    fn compute_items(&mut self, mut inputs: impl Iterator<Item = ProcessingResult<ItemType>>) -> ProcessingResult<ItemType>
+    fn compute_items(&mut self, mut inputs: Box<dyn Iterator<Item = ProcessingResult<ItemType>>>) -> ProcessingResult<ItemType>
     {
         let input = inputs.next();
         if input.is_none()

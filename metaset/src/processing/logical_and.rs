@@ -2,14 +2,15 @@
 use std::rc::Rc;
 // crate
 use crate::metaset::{MetaSet, Item, SimpleItemSet};
-use crate::processing::{Processor, ProcessingError, ProcessingResult, simple_union, simple_difference, simple_intersection};
+use crate::processing::{Processor, ProcessingError, ProcessingResult};
+use crate::processing::util::{simple_union, simple_intersection, simple_difference};
 
 pub struct LogicalAnd ();
 
 impl<ItemType> Processor<ItemType> for LogicalAnd
 where ItemType: Item
 {
-    fn compute_items(&mut self, mut inputs: impl Iterator<Item = ProcessingResult<ItemType>>) -> ProcessingResult<ItemType>
+    fn compute_items(&mut self, mut inputs: Box<dyn Iterator<Item = ProcessingResult<ItemType>>>) -> ProcessingResult<ItemType>
     {
         let mut include_set : Option<SimpleItemSet<ItemType>> = None;
         let mut exclude_set : Option<SimpleItemSet<ItemType>> = None;

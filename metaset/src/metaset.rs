@@ -3,7 +3,6 @@ use std::rc::Rc;
 use std::hash::{Hash, Hasher};
 use std::collections::HashSet;
 
-
 pub trait Item: PartialEq + Eq + Hash {}
 
 pub struct RcItem<ItemType: Item> (Rc<ItemType>);
@@ -13,7 +12,6 @@ where ItemType: Item
 {
     fn clone(&self) -> RcItem<ItemType> { RcItem (Rc::clone(&self.0)) }
 }
-
 impl<ItemType> Hash for RcItem<ItemType>
 where ItemType: Item
 {
@@ -21,7 +19,6 @@ where ItemType: Item
         hasher.write_usize(Rc::as_ptr(&self.0) as usize);
     }
 }
-
 impl<ItemType> PartialEq for RcItem<ItemType>
 where ItemType: Item
 {
@@ -30,8 +27,7 @@ where ItemType: Item
     }
 }
 impl<ItemType> Eq for RcItem<ItemType>
-where ItemType: Item
-{}
+where ItemType: Item {}
 
 pub type SimpleItemSet<ItemType> = HashSet<RcItem<ItemType>>;
 
@@ -45,7 +41,7 @@ where ItemType: Item
 impl<ItemType> Clone for MetaSet<ItemType>
 where ItemType: Item
 {
-    fn clone(&self) -> Self
+    fn clone(&self) -> MetaSet<ItemType>
     {
         match self {
             Self::Include {set} => Self::Include { set: set.clone() },
@@ -62,22 +58,6 @@ where ItemType: Item
         match self {
             MetaSet::Include {..} => true,
             MetaSet::Exclude {..} => false,
-        }
-    }
-
-    pub fn get_include_set(&self) -> &SimpleItemSet<ItemType>
-    {
-        match self {
-            MetaSet::Include {ref set} => set,
-            MetaSet::Exclude {set: _} => panic!("MetaSet::Exclude does not support get_include_set()"),
-        }
-    }
-
-    pub fn get_exclude_set(&self) -> &SimpleItemSet<ItemType>
-    {
-        match self {
-            MetaSet::Include {set: _} => panic!("MetaSet::Include does not supoport get_exclude_set()"),
-            MetaSet::Exclude {ref set} => set,
         }
     }
 }

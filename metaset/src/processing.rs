@@ -1,77 +1,49 @@
 // standard rust
+use std::fmt::{Display, Formatter};
 use std::iter::Iterator;
 use std::rc::Rc;
-
 // crate
-use crate::metaset::{Item, MetaSet, SimpleItemSet};
+use crate::metaset::{Item, MetaSet};
 
 mod logical_not;
 mod logical_or;
 mod logical_and;
-mod error;
+mod util;
 
+// re-exports
 pub use logical_and::LogicalAnd;
 pub use logical_or::LogicalOr;
 pub use logical_not::LogicalNot;
 
-pub use error::ProcessingError;
-pub type ProcessingResult<ItemType> = Result<Rc<MetaSet<ItemType>>, ProcessingError>;
-
-
-
 pub trait Processor<ItemType>
 where ItemType: Item
 {
-    fn compute_items(&mut self, inputs: impl Iterator<Item = ProcessingResult<ItemType>>) -> ProcessingResult<ItemType>;
+    fn compute_items(&mut self, inputs: Box<dyn Iterator<Item = ProcessingResult<ItemType>>>) -> ProcessingResult<ItemType>;
 }
 
-fn simple_intersection<ItemType>(set1: &SimpleItemSet<ItemType>, set2: &SimpleItemSet<ItemType>) -> SimpleItemSet<ItemType>
-where ItemType: Item
+#[derive(Debug)]
+pub enum ProcessingError
 {
-    let mut result: SimpleItemSet<ItemType> = SimpleItemSet::default();
+    InvalidConfig,
+    ExternalFailure,
+    TooManyInputs,
+    MissingInputs,
+}
 
-    for item in set1
-    {
-        assert!(!result.contains(item));
-        if set2.contains(item)
+impl Display for ProcessingError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match *self
         {
-            result.insert(item.clone());
+            Self::InvalidConfig => write!(f, "InvalidConfig"),
+            Self::ExternalFailure => write!(f, "ExternalFailure"),
+            Self::TooManyInputs => write!(f, "TooManyInputs"),
+            Self::MissingInputs => write!(f, "MissingInputs"),
         }
     }
-
-    result
 }
 
-fn simple_union<ItemType>(set1: &SimpleItemSet<ItemType>, set2: &SimpleItemSet<ItemType>) -> SimpleItemSet<ItemType>
-where ItemType: Item
-{
-    let mut result: SimpleItemSet<ItemType> = (*set1).clone();
-
-    for item in set2
-    {
-        result.insert(item.clone());
-    }
-
-    result
-}
-
-fn simple_difference<ItemType>(set1: &SimpleItemSet<ItemType>, set2: &SimpleItemSet<ItemType>) -> SimpleItemSet<ItemType>
-where ItemType: Item
-{
-    let mut result: SimpleItemSet<ItemType> = SimpleItemSet::default();
-
-    for item in set1
-    {
-        assert!(!result.contains(item));
-        if !set2.contains(item)
-        {
-            result.insert(item.clone());
-        }
-    }
-
-    result
-}
-
+impl std::error::Error for ProcessingError {}
+pub type ProcessingResult<ItemType> = Result<Rc<MetaSet<ItemType>>, ProcessingError>;
 
 /*
 pub fn get_items<ItemType>(nodes: NodeSlice<ItemType>, id: usize) -> Result<Rc<MetaSet<ItemType>>, NodeResolveError>
