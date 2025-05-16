@@ -8,12 +8,16 @@ use crate::metaset::{Item, MetaSet};
 mod logical_not;
 mod logical_or;
 mod logical_and;
+mod source;
+mod filter;
 mod util;
 
 // re-exports
 pub use logical_and::LogicalAnd;
 pub use logical_or::LogicalOr;
 pub use logical_not::LogicalNot;
+pub use filter::Filter;
+pub use source::Source;
 
 pub trait Processor<ItemType>
 where ItemType: Item
@@ -28,6 +32,7 @@ pub enum ProcessingError
     ExternalFailure,
     TooManyInputs,
     MissingInputs,
+    InvalidInputs
 }
 
 impl Display for ProcessingError {
@@ -38,12 +43,14 @@ impl Display for ProcessingError {
             Self::ExternalFailure => write!(f, "ExternalFailure"),
             Self::TooManyInputs => write!(f, "TooManyInputs"),
             Self::MissingInputs => write!(f, "MissingInputs"),
+            Self::InvalidInputs => write!(f, "InvalidInputs"),
         }
     }
 }
 
 impl std::error::Error for ProcessingError {}
 pub type ProcessingResult<ItemType> = Result<Rc<MetaSet<ItemType>>, ProcessingError>;
+
 
 /*
 pub fn get_items<ItemType>(nodes: NodeSlice<ItemType>, id: usize) -> Result<Rc<MetaSet<ItemType>>, NodeResolveError>
