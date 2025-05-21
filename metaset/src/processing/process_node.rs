@@ -2,6 +2,8 @@ use crate::metaset::Item;
 use crate::processing::ProcessingResult;
 use crate::processing::processor::Processor;
 
+use super::{ProcessingError, ProcessingErrorType};
+
 pub struct ProcessNode<ItemType: Item>
 {
     pub id: usize,
@@ -15,13 +17,17 @@ where ItemType: Item
 {
     pub fn resolve(
         &self,
-        get_descendents: &dyn Fn(&Vec<usize>) -> Box<dyn Iterator<Item = ProcessNode<ItemType>>>
+        id: usize,
+        nodes: &[ProcessNode<ItemType>]
     ) -> ProcessingResult<ItemType> {
-        let descendents: Box<dyn Iterator<Item = ProcessNode<ItemType>>> = get_descendents(&self.dep_ids);
+        let inputs: Vec<ProcessingResult<ItemType>> = self.dep_ids.iter().map(|dep_id: &usize| {
+            match nodes.get(*dep_id) {
+                Some(ref node) => {node.resolve(*dep_id, nodes)},
+                None => Err(ProcessingError{node_id: Some(id),
+                                            error_type: ProcessingErrorType::InvalidConfig})
+            }
+        }).collect();
 
-        let inputs: Vec<ProcessingResult<ItemType>> =
-            descendents.map(|d| d.resolve(get_descendents)).collect();
-
-        self.processor.compute_items(&inputs)
+        self.processor.compute_items(id, &inputs)
     }
 }

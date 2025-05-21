@@ -17,5 +17,5 @@ pub use source::Source;
 pub trait Processor<ItemType>
 where ItemType: Item
 {
-    fn compute_items(&self, inputs: &[ProcessingResult<ItemType>]) -> ProcessingResult<ItemType>;
+    fn compute_items(&self, id: usize, inputs: &[ProcessingResult<ItemType>]) -> ProcessingResult<ItemType>;
 }

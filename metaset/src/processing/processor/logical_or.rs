@@ -2,7 +2,7 @@
 use std::rc::Rc;
 // crate
 use crate::metaset::{MetaSet, Item, SimpleItemSet};
-use crate::processing::{ProcessingError, ProcessingResult};
+use crate::processing::{ProcessingError, ProcessingErrorType, ProcessingResult};
 use crate::processing::processor::Processor;
 use crate::processing::util::{simple_union, simple_intersection, simple_difference};
 
@@ -11,7 +11,7 @@ pub struct LogicalOr ();
 impl<ItemType> Processor<ItemType> for LogicalOr
 where ItemType: Item
 {
-    fn compute_items(&self, inputs: &[ProcessingResult<ItemType>]) -> ProcessingResult<ItemType>
+    fn compute_items(&self, id: usize, inputs: &[ProcessingResult<ItemType>]) -> ProcessingResult<ItemType>
     {
         let mut include_set : Option<SimpleItemSet<ItemType>> = None;
         let mut exclude_set : Option<SimpleItemSet<ItemType>> = None;
@@ -44,7 +44,8 @@ where ItemType: Item
 
         if include_set.is_none() && exclude_set.is_none()
         {
-            return Err(ProcessingError::MissingInputs);
+            return Err(ProcessingError{node_id: Some(id),
+                                       error_type: ProcessingErrorType::MissingInputs});
         }
 
         if include_set.is_some()

@@ -2,7 +2,7 @@
 use std::rc::Rc;
 // crate
 use crate::metaset::{MetaSet, Item};
-use crate::processing::{ProcessingError, ProcessingResult};
+use crate::processing::{ProcessingError, ProcessingErrorType, ProcessingResult};
 use crate::processing::processor::Processor;
 
 pub struct LogicalNot ();
@@ -10,15 +10,18 @@ pub struct LogicalNot ();
 impl<ItemType> Processor<ItemType> for LogicalNot
 where ItemType: Item
 {
-    fn compute_items(&self, inputs: &[ProcessingResult<ItemType>]) -> ProcessingResult<ItemType>
+    fn compute_items(&self, id: usize, inputs: &[ProcessingResult<ItemType>]) -> ProcessingResult<ItemType>
     {
         if inputs.len() == 0
         {
-            return Err(ProcessingError::MissingInputs);
+            return Err(ProcessingError{node_id: Some(id),
+                                        error_type: ProcessingErrorType::MissingInputs});
         }
         else if inputs.len() > 1
         {
-            return Err(ProcessingError::TooManyInputs);
+            return Err(ProcessingError{node_id: Some(id),
+                                        error_type: ProcessingErrorType::TooManyInputs});
+
         }
 
         let input: Rc<MetaSet<ItemType>> = inputs[0].clone()?;

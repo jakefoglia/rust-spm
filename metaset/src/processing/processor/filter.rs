@@ -1,7 +1,7 @@
 use std::rc::Rc;
 // crate
 use crate::metaset::{MetaSet, Item, SimpleItemSet};
-use crate::processing::{ProcessingError, ProcessingResult};
+use crate::processing::{ProcessingError, ProcessingErrorType, ProcessingResult};
 use crate::processing::processor::Processor;
 
 
@@ -15,26 +15,31 @@ pub struct Filter<ItemType: Item>
 impl<ItemType> Processor<ItemType> for Filter<ItemType>
 where ItemType: Item
 {
-    fn compute_items(&self, inputs: &[ProcessingResult<ItemType>]) -> ProcessingResult<ItemType> {
+    fn compute_items(&self, id: usize, inputs: &[ProcessingResult<ItemType>]) -> ProcessingResult<ItemType> {
         if self.filter_criteria.is_none()
         {
-            return Err(ProcessingError::InvalidConfig);
+            return Err(ProcessingError{node_id: Some(id),
+                                       error_type: ProcessingErrorType::InvalidConfig});
         }
 
         if inputs.len() == 0
         {
-            return Err(ProcessingError::MissingInputs);
+            return Err(ProcessingError{node_id: Some(id),
+                                       error_type: ProcessingErrorType::MissingInputs});
+
         }
         else if inputs.len() > 1
         {
-            return Err(ProcessingError::TooManyInputs);
+            return Err(ProcessingError{node_id: Some(id),
+                                       error_type: ProcessingErrorType::TooManyInputs});
         }
 
         let input: Rc<MetaSet<ItemType>> = inputs[0].clone()?;
 
         match input.as_ref() {
              MetaSet::Include {ref set} => self.filter_criteria.as_ref().unwrap()(set),
-            _ => Err(ProcessingError::InvalidInputs)
+            _ => Err(ProcessingError{node_id: Some(id),
+                                     error_type: ProcessingErrorType::InvalidInputs})
         }
     }
 }
