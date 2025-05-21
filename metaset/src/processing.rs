@@ -5,16 +5,14 @@ use std::rc::Rc;
 use crate::metaset::MetaSet;
 
 mod util;
-
-pub mod processor;
 mod process_chain;
 mod process_node;
+pub mod processor;
 
 pub use process_chain::ProcessChain;
 pub use process_node::ProcessNode;
 
-
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum ProcessingError
 {
     InvalidConfig,

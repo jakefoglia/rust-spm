@@ -13,9 +13,9 @@ pub struct Source<ItemType: Item>
 impl<ItemType> Processor<ItemType> for Source<ItemType>
 where ItemType: Item
 {
-    fn compute_items(&mut self, mut inputs: Box<dyn Iterator<Item = ProcessingResult<ItemType>>>) -> ProcessingResult<ItemType>
+    fn compute_items(&self,inputs: &[ProcessingResult<ItemType>]) -> ProcessingResult<ItemType>
     {
-        if inputs.next().is_some()
+        if inputs.len() > 0
         {
             return Err(ProcessingError::TooManyInputs);
         }

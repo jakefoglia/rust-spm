@@ -10,21 +10,19 @@ pub struct LogicalNot ();
 impl<ItemType> Processor<ItemType> for LogicalNot
 where ItemType: Item
 {
-    fn compute_items(&mut self, mut inputs: Box<dyn Iterator<Item = ProcessingResult<ItemType>>>) -> ProcessingResult<ItemType>
+    fn compute_items(&self, inputs: &[ProcessingResult<ItemType>]) -> ProcessingResult<ItemType>
     {
-        let input = inputs.next();
-        if input.is_none()
+        if inputs.len() == 0
         {
             return Err(ProcessingError::MissingInputs);
         }
-
-        let next_input = inputs.next();
-        if next_input.is_some()
+        else if inputs.len() > 1
         {
             return Err(ProcessingError::TooManyInputs);
         }
 
-        match input.unwrap()?.as_ref() {
+        let input: Rc<MetaSet<ItemType>> = inputs[0].clone()?;
+        match input.as_ref() {
             // swap the include and exclude set
             &MetaSet::Include {ref set} => {
                 Ok(Rc::new(MetaSet::Exclude { set: set.clone() }))

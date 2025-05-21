@@ -11,14 +11,16 @@ pub struct LogicalOr ();
 impl<ItemType> Processor<ItemType> for LogicalOr
 where ItemType: Item
 {
-    fn compute_items(&mut self, mut inputs: Box<dyn Iterator<Item = ProcessingResult<ItemType>>>) -> ProcessingResult<ItemType>
+    fn compute_items(&self, inputs: &[ProcessingResult<ItemType>]) -> ProcessingResult<ItemType>
     {
         let mut include_set : Option<SimpleItemSet<ItemType>> = None;
         let mut exclude_set : Option<SimpleItemSet<ItemType>> = None;
 
-        while let Some(input) = inputs.next()
+        for input in inputs
         {
-            match input?.as_ref() {
+            let input: Rc<MetaSet<ItemType>> = input.clone()?;
+
+            match input.as_ref() {
                 &MetaSet::Include {ref set} => {
                     if include_set.is_none() {
                         include_set = Some(SimpleItemSet::default())
