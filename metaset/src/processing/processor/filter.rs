@@ -1,9 +1,8 @@
-// standard rust
- use std::rc::Rc;
 // crate
-use crate::metaset::{Item, SimpleItemSet};
-use crate::processing::{Processor, ProcessingError, ProcessingResult};
-use crate::MetaSet;
+use crate::metaset::{MetaSet, Item, SimpleItemSet};
+use crate::processing::{ProcessingError, ProcessingResult};
+use crate::processing::processor::Processor;
+
 
 type FilterFn<ItemType> = Box<dyn Fn(&SimpleItemSet<ItemType>) -> ProcessingResult<ItemType>>;
 

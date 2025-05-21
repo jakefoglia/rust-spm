@@ -2,12 +2,14 @@
 use std::rc::Rc;
 // crate
 use crate::metaset::{MetaSet, Item, SimpleItemSet};
-use crate::processing::{Processor, ProcessingError, ProcessingResult};
+use crate::processing::{ProcessingError, ProcessingResult};
+use crate::processing::processor::Processor;
+
 use crate::processing::util::{simple_union, simple_intersection, simple_difference};
 
-pub struct LogicalOr ();
+pub struct LogicalAnd ();
 
-impl<ItemType> Processor<ItemType> for LogicalOr
+impl<ItemType> Processor<ItemType> for LogicalAnd
 where ItemType: Item
 {
     fn compute_items(&mut self, mut inputs: Box<dyn Iterator<Item = ProcessingResult<ItemType>>>) -> ProcessingResult<ItemType>
@@ -24,7 +26,7 @@ where ItemType: Item
                     };
 
                     include_set = Some(
-                        simple_union(include_set.as_ref().unwrap(), set)
+                        simple_intersection(include_set.as_ref().unwrap(), set)
                     );
                 }
                 &MetaSet::Exclude {ref set} => {
@@ -33,7 +35,7 @@ where ItemType: Item
                     };
 
                     exclude_set = Some(
-                        simple_intersection(exclude_set.as_ref().unwrap(), set)
+                        simple_union(exclude_set.as_ref().unwrap(), set)
                     );
                 }
             }

@@ -1,9 +1,9 @@
 // standard rust
  use std::rc::Rc;
 // crate
-use crate::metaset::Item;
-use crate::processing::{Processor, ProcessingError, ProcessingResult};
-use crate::MetaSet;
+use crate::metaset::{MetaSet, Item};
+use crate::processing::{ProcessingError, ProcessingResult};
+use crate::processing::processor::Processor;
 
 pub struct Source<ItemType: Item>
 {

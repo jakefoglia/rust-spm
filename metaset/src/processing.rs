@@ -1,29 +1,18 @@
 // standard rust
 use std::fmt::{Display, Formatter};
-use std::iter::Iterator;
 use std::rc::Rc;
 // crate
-use crate::metaset::{Item, MetaSet};
+use crate::metaset::MetaSet;
 
-mod logical_not;
-mod logical_or;
-mod logical_and;
-mod source;
-mod filter;
 mod util;
 
-// re-exports
-pub use logical_and::LogicalAnd;
-pub use logical_or::LogicalOr;
-pub use logical_not::LogicalNot;
-pub use filter::Filter;
-pub use source::Source;
+pub mod processor;
+mod process_chain;
+mod process_node;
 
-pub trait Processor<ItemType>
-where ItemType: Item
-{
-    fn compute_items(&mut self, inputs: Box<dyn Iterator<Item = ProcessingResult<ItemType>>>) -> ProcessingResult<ItemType>;
-}
+pub use process_chain::ProcessChain;
+pub use process_node::ProcessNode;
+
 
 #[derive(Debug)]
 pub enum ProcessingError
@@ -50,31 +39,3 @@ impl Display for ProcessingError {
 
 impl std::error::Error for ProcessingError {}
 pub type ProcessingResult<ItemType> = Result<Rc<MetaSet<ItemType>>, ProcessingError>;
-
-
-/*
-pub fn get_items<ItemType>(nodes: NodeSlice<ItemType>, id: usize) -> Result<Rc<MetaSet<ItemType>>, NodeResolveError>
-where ItemType: Item
-{
-    let node = Rc::clone(&nodes[id]);
-    let mut node_ref: RefMut<dyn Node<ItemType>> = (*node).borrow_mut();
-    node_ref.get_items(nodes)
-}
-
-pub fn clear_cache_recursive<ItemType>(nodes: NodeSlice<ItemType>, id: usize)
-where ItemType: Item
-{
-    let mut ids: Vec<usize> = vec![id];
-
-    while !ids.is_empty()
-    {
-        let id = ids.pop().unwrap();
-
-        let node = Rc::clone(&nodes[id]);
-        let mut node_ref: RefMut<dyn Node<ItemType>> = (*node).borrow_mut();
-
-        node_ref.clear_cached_items();
-        ids.extend_from_slice(node_ref.get_parent_ids());
-    }
-}
-*/

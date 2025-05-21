@@ -2,7 +2,8 @@
 use std::rc::Rc;
 // crate
 use crate::metaset::{MetaSet, Item};
-use crate::processing::{Processor, ProcessingError, ProcessingResult};
+use crate::processing::{ProcessingError, ProcessingResult};
+use crate::processing::processor::Processor;
 
 pub struct LogicalNot ();
 
